@@ -19,6 +19,8 @@ Line  Content
 4    "143" the line number of the last hint (meaning line 147)
 [end of header]
 
+
+
 [directory tree]
 5    "gHrGtGs iqrGr"="Opening Scene"
 6    "23" the line number jumped to when selecting this link (meaning line 27)
@@ -34,27 +36,42 @@ Line  Content
 76   "141" link destination line no (meaning line 145)
 [end of directory tree]
 
+
+
 [hints]
 77   This is the first hint line, as indicated in the header.
 [...]
 147  This is the last hint line, as indicated in the header.
 """
-def read_file(filename: str) -> list:
-    with open(filename) as f: lines = [line.rstrip('\n') for line in f]
-    return lines
-
-
 test_string = "|wz pIr zytGs Bwry GwJ yzHHwIJ'  ;tytJ JDr j4i {rA ytJr pJ"
-def decode_UHS88a(mystr: str) -> str:
-    result = []
-    for i in mystr:
-        code = ord(i)
-        if code<32:
-            result.append(chr(code))
-        elif code<80:
-            result.append(chr(2*code-32))
-        else:
-            result.append(chr(2*code-127))
-    return ''.join(result)
 
 
+class UhsError(LookupError):
+    """raise this if there is a lookup error somewhere"""
+
+
+class UHS:
+    def __init__(self, filename, *args, **kwargs):
+        self.filename = filename
+        self.lines = self.read_file()
+
+    def read_file(self) -> list:
+        with open(self.filename) as f:
+            return [line.rstrip('\n') for line in f]
+
+    def decode_UHS88a(self, mystr: str) -> str:
+        result = []
+        for i in mystr:
+            code = ord(i)
+            if code < 32:
+                result.append(chr(code))
+            elif code < 80:
+                result.append(chr(2*code-32))
+            else:
+                result.append(chr(2*code-127))
+        return ''.join(result)
+
+    def generate_UHS88a_structure(self) -> dict:
+        if self.lines[0] != 'UHS':
+            raise UhsError('The file you read is not valid')
+        pass
