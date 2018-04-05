@@ -1,50 +1,4 @@
 import json
-"""
-Psudocode for UHS88a
-
-if i<32
-  return i
-endif
-if i<80
-  return 2*i-32
-else
-  return 2*i-127
-endif
-
-File composition
-
-Line  Content
-1    "UHS", a magic marker indicating a UHS file.
-2    "Borrowed Time", the main title
-3    "73" the line number of the first hint (meaning line 77)
-4    "143" the line number of the last hint (meaning line 147)
-[end of header]
-
-
-
-[directory tree]
-5    "gHrGtGs iqrGr"="Opening Scene"
-6    "23" the line number jumped to when selecting this link (meaning line 27)
-[...]
-25   "kIpHHtGs jH JDr apyr"="Wrapping Up the Case"
-26   "69" -- this is the last entry of the main directory, since a link above linked to line 27.
-27   "kDpJ Bw d Bw tG JDr wCCtqr"="What do I do in the office" (note: no question mark)
-28   "73" link destination line no (meaning line 77)
-29   "4w{ Bw d ryqpHr CIwv JDr JDzsy"="How do I escape from the thugs" (note: no question mark)
-30   "76" link destination line no (meaning line 80)
-[...]
-75   "4w{ Bw d pIIryJ 3pIGDpv"="How do I arrest Farnham" (note: no question mark)
-76   "141" link destination line no (meaning line 145)
-[end of directory tree]
-
-
-
-[hints]
-77   This is the first hint line, as indicated in the header.
-[...]
-147  This is the last hint line, as indicated in the header.
-"""
-test_string = "|wz pIr zytGs Bwry GwJ yzHHwIJ'  ;tytJ JDr j4i {rA ytJr pJ"
 
 
 class UhsError(LookupError):
@@ -92,6 +46,7 @@ class UHS:
         body_lines = []
         tmp = []
         hints = {}
+        hint_dir = {}
         if self.lines[0] != 'UHS':
             raise UhsError('The file you read is not valid')
         else:
@@ -109,7 +64,6 @@ class UHS:
             if main_generating:
                 if k < hint_file["First Hint Line"] and k % 2 == 1:
                     main[v] = self.structure[k+1]
-                    print(v)
 
                 elif len(main) is 1:
                     stopsign = next(iter(main.values())) - 1
@@ -139,10 +93,17 @@ class UHS:
                         tmp.append((v, self.structure[k+1]))
                         body.update({body_keys[0]: tmp[:]})
                     tmp.append((v, self.structure[k+1]))
+                    if self.structure[k+1] + self.offset < hint_file["Last Hint Line"]:
+                        hint_dir.update({v: (self.structure[k+1],
+                                             self.structure[k+3])})
+                    else:
+                        hint_dir.update({v: (self.structure[k+1],
+                                             hint_file["Last Hint Line"])})
                 elif k >= hint_file["First Hint Line"] and k <= hint_file["Last Hint Line"]:
                     hints.update({k: v})
         hint_file["Main"] = body
         hint_file["Hints"] = hints
+        hint_file["Directory"] = hint_dir
         return hint_file
 
 f = UHS('BORWDT.UHS')
